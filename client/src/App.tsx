@@ -8,6 +8,9 @@ import DashboardPage from "@/pages/dashboard-page";
 import AbsencesPage from "@/pages/absences-page";
 import StudentsPage from "@/pages/students-page";
 import ClassesPage from "@/pages/classes-page";
+import ReportsPage from "@/pages/reports-page";
+import SettingsPage from "@/pages/settings-page";
+import HelpPage from "@/pages/help-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 
@@ -19,6 +22,9 @@ function Router() {
       <ProtectedRoute path="/absences" component={AbsencesPage} />
       <ProtectedRoute path="/students" component={StudentsPage} />
       <ProtectedRoute path="/classes" component={ClassesPage} />
+      <ProtectedRoute path="/reports" component={ReportsPage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/help" component={HelpPage} />
       <Route component={NotFound} />
     </Switch>
   );
