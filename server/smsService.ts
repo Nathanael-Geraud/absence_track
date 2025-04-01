@@ -17,8 +17,9 @@ export interface SMSMessage {
 
 export class SMSService {
   private twilioClient: twilio.Twilio | null = null;
-  private twilioPhone: string | null = null;
+  private twilioSender: string | null = null;
   private isConfigured: boolean = false;
+  private useAlphanumericSender: boolean = true; // Par défaut, utiliser un ID alphanumérique
 
   constructor() {
     // Initialize Twilio client if environment variables are set
@@ -26,24 +27,33 @@ export class SMSService {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     let phoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
-    if (accountSid && authToken && phoneNumber) {
+    if (accountSid && authToken) {
       this.twilioClient = twilio(accountSid, authToken);
       
-      // Format the Twilio phone number correctly (should be in E.164 format)
-      if (phoneNumber.startsWith('0') && phoneNumber.length === 10) {
-        // French number starting with 0, convert to +33
-        phoneNumber = `+33${phoneNumber.substring(1)}`;
-        console.log(`[SMS Service] Formatted Twilio phone number from ${process.env.TWILIO_PHONE_NUMBER} to ${phoneNumber}`);
-      } else if (!phoneNumber.startsWith('+')) {
-        // Add + if missing
-        phoneNumber = `+${phoneNumber}`;
-        console.log(`[SMS Service] Added + prefix to Twilio phone number: ${phoneNumber}`);
+      // Si nous utilisons un ID alphanumérique comme expéditeur
+      if (this.useAlphanumericSender) {
+        this.twilioSender = "GestiAbs"; // Maximum 11 caractères
+        console.log(`[SMS Service] Using alphanumeric sender ID: ${this.twilioSender}`);
+      } 
+      // Sinon, utiliser le numéro de téléphone Twilio (si disponible)
+      else if (phoneNumber) {
+        // Format the Twilio phone number correctly (should be in E.164 format)
+        if (phoneNumber.startsWith('0') && phoneNumber.length === 10) {
+          // French number starting with 0, convert to +33
+          phoneNumber = `+33${phoneNumber.substring(1)}`;
+          console.log(`[SMS Service] Formatted Twilio phone number from ${process.env.TWILIO_PHONE_NUMBER} to ${phoneNumber}`);
+        } else if (!phoneNumber.startsWith('+')) {
+          // Add + if missing
+          phoneNumber = `+${phoneNumber}`;
+          console.log(`[SMS Service] Added + prefix to Twilio phone number: ${phoneNumber}`);
+        }
+        
+        this.twilioSender = phoneNumber;
+        console.log(`[SMS Service] Using Twilio phone number: ${this.twilioSender}`);
       }
       
-      this.twilioPhone = phoneNumber;
       this.isConfigured = true;
       console.log('[SMS Service] Twilio client initialized with provided credentials');
-      console.log(`[SMS Service] Using Twilio phone number: ${this.twilioPhone}`);
       
       // Check if using trial account
       if (accountSid.startsWith('AC') && accountSid.length === 34) {
@@ -68,7 +78,7 @@ export class SMSService {
     console.log(`[SMS Service] Sending SMS to ${to}: ${message}`);
     
     // Check if Twilio is configured
-    if (this.isConfigured && this.twilioClient && this.twilioPhone) {
+    if (this.isConfigured && this.twilioClient && this.twilioSender) {
       try {
         // Note: Nous supposons que le numéro 'to' est déjà au format international
         // car il est formaté dans sms.ts avant d'être passé ici
@@ -76,7 +86,7 @@ export class SMSService {
         // Send SMS via Twilio
         const twilioMessage = await this.twilioClient.messages.create({
           body: message,
-          from: this.twilioPhone,
+          from: this.twilioSender,
           to: to
         });
         

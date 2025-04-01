@@ -33,33 +33,30 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   const message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
   
   try {
-    // Check if we need to use the mock service (if source and destination numbers are the same)
-    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
-    let formattedTwilioNumber = twilioNumber;
+    // Nous utilisons maintenant un expéditeur alphanumérique,
+    // donc pas besoin de vérifier si les numéros sont identiques
+    console.log(`[SMS] Envoi du SMS au numéro ${formattedNumber} avec l'expéditeur alphanumérique`);
     
-    // Format the Twilio number for comparison
-    if (twilioNumber && twilioNumber.startsWith('0') && twilioNumber.length === 10) {
-      formattedTwilioNumber = `+33${twilioNumber.substring(1)}`;
-    } else if (twilioNumber && !twilioNumber.startsWith('+')) {
-      formattedTwilioNumber = `+${twilioNumber}`;
+    // Vérifier si c'est un numéro de test pour Twilio
+    const testToNumber = process.env.TWILIO_TEST_TO_NUMBER;
+    let formattedTestNumber = testToNumber;
+    
+    // Si un numéro de test est défini, le formatter correctement pour la comparaison
+    if (testToNumber) {
+      if (testToNumber.startsWith('0') && testToNumber.length === 10) {
+        formattedTestNumber = `+33${testToNumber.substring(1)}`;
+      } else if (!testToNumber.startsWith('+')) {
+        formattedTestNumber = `+${testToNumber}`;
+      }
+      
+      // Si le numéro destinataire est le numéro de test, le mentionner dans les logs
+      if (formattedNumber === formattedTestNumber) {
+        console.log(`[SMS Service] Utilisation du numéro de test vérifié: ${formattedNumber} au lieu de ${to}`);
+      }
     }
     
-    // Check if the numbers are the same
-    const numbersAreSame = formattedNumber === formattedTwilioNumber;
-    
-    console.log(`[SMS] Comparaison des numéros de téléphone:`);
-    console.log(`[SMS] - Numéro destinataire: ${formattedNumber}`);
-    console.log(`[SMS] - Numéro Twilio:       ${formattedTwilioNumber}`);
-    console.log(`[SMS] - Numéros identiques:  ${numbersAreSame}`);
-    
-    let response;
-    if (numbersAreSame) {
-      console.log(`[SMS] Numéros d'envoi et de destination identiques, utilisation du service de simulation`);
-      response = await mockSmsService.sendSMS(formattedNumber, message);
-    } else {
-      // Use our SMS service that utilizes Twilio if configured
-      response = await smsService.sendSMS(formattedNumber, message);
-    }
+    // Utiliser le service Twilio (avec ID alphanumérique) dans tous les cas
+    const response = await smsService.sendSMS(formattedNumber, message);
     
     if (response.success) {
       console.log(`SMS envoyé avec succès à ${formattedNumber}, ID: ${response.messageId}`);
