@@ -1,7 +1,7 @@
 [build]
   base = "."
-  publish = "dist"
-  command = "cd client && vite build"
+  publish = "dist/public"
+  command = "cd client && npm run build"
 
 [build.environment]
   NODE_VERSION = "20"

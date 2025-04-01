@@ -13,12 +13,14 @@ L'application est divisée en deux parties :
 1. Créez un compte sur [Netlify](https://www.netlify.com/) si ce n'est pas déjà fait
 2. Depuis le Dashboard Netlify, cliquez sur "New site from Git"
 3. Sélectionnez votre dépôt Git
-4. Configurez les paramètres de build :
-   - Build command : `cd client && vite build`
-   - Publish directory : `dist`
+4. Les paramètres de build sont déjà configurés dans le fichier `netlify.toml` :
+   - Build command : `cd client && npm run build`
+   - Publish directory : `dist/public`
 5. Ajoutez les variables d'environnement :
    - `VITE_API_URL` : URL de votre backend (ex: https://votre-app-backend.herokuapp.com)
 6. Cliquez sur "Deploy site"
+
+**Remarque importante :** Si vous rencontrez des problèmes de build liés aux chemins d'importation avec l'alias `@/`, modifiez tous les imports dans les fichiers client pour utiliser des chemins relatifs à la place (comme nous l'avons fait pour les composants toast et toaster).
 
 ## Déploiement du Backend
 
