@@ -24,13 +24,26 @@ export class SMSService {
     // Initialize Twilio client if environment variables are set
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
+    let phoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
     if (accountSid && authToken && phoneNumber) {
       this.twilioClient = twilio(accountSid, authToken);
+      
+      // Format the Twilio phone number correctly (should be in E.164 format)
+      if (phoneNumber.startsWith('0') && phoneNumber.length === 10) {
+        // French number starting with 0, convert to +33
+        phoneNumber = `+33${phoneNumber.substring(1)}`;
+        console.log(`[SMS Service] Formatted Twilio phone number from ${process.env.TWILIO_PHONE_NUMBER} to ${phoneNumber}`);
+      } else if (!phoneNumber.startsWith('+')) {
+        // Add + if missing
+        phoneNumber = `+${phoneNumber}`;
+        console.log(`[SMS Service] Added + prefix to Twilio phone number: ${phoneNumber}`);
+      }
+      
       this.twilioPhone = phoneNumber;
       this.isConfigured = true;
       console.log('[SMS Service] Twilio client initialized with provided credentials');
+      console.log(`[SMS Service] Using Twilio phone number: ${this.twilioPhone}`);
       
       // Check if using trial account
       if (accountSid.startsWith('AC') && accountSid.length === 34) {
@@ -57,24 +70,14 @@ export class SMSService {
     // Check if Twilio is configured
     if (this.isConfigured && this.twilioClient && this.twilioPhone) {
       try {
-        // Format the phone number to E.164 format required by Twilio
-        let formattedNumber = to;
-        
-        // Handle French numbers
-        if (to.startsWith('0') && (to.length === 10)) {
-          // French number: replace initial 0 with +33
-          formattedNumber = `+33${to.substring(1)}`;
-          console.log(`[SMS Service] Formatted French number from ${to} to ${formattedNumber}`);
-        } else if (!to.startsWith('+')) {
-          // Add + prefix if missing
-          formattedNumber = `+${to}`;
-        }
+        // Note: Nous supposons que le numéro 'to' est déjà au format international
+        // car il est formaté dans sms.ts avant d'être passé ici
         
         // Send SMS via Twilio
         const twilioMessage = await this.twilioClient.messages.create({
           body: message,
           from: this.twilioPhone,
-          to: formattedNumber
+          to: to
         });
         
         console.log(`[SMS Service] SMS sent successfully via Twilio. SID: ${twilioMessage.sid}`);

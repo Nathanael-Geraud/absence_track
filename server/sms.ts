@@ -14,18 +14,32 @@ interface SendSmsParams {
 export async function sendSms(params: SendSmsParams): Promise<boolean> {
   const { to, studentName, className, date, startTime, endTime, subject } = params;
   
+  // Format the recipient phone number to E.164 format if needed
+  let formattedNumber = to;
+    
+  // Handle French numbers (starting with 0)
+  if (to.startsWith('0') && to.length === 10) {
+    // French number: replace initial 0 with +33
+    formattedNumber = `+33${to.substring(1)}`;
+    console.log(`[SMS] Formatted recipient number from ${to} to ${formattedNumber}`);
+  } else if (!to.startsWith('+')) {
+    // Add + prefix if missing
+    formattedNumber = `+${formattedNumber}`;
+    console.log(`[SMS] Added + prefix to recipient number: ${formattedNumber}`);
+  }
+  
   // Format the SMS message
   const message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
   
   try {
     // Use our SMS service that utilizes Twilio if configured
-    const response = await smsService.sendSMS(to, message);
+    const response = await smsService.sendSMS(formattedNumber, message);
     
     if (response.success) {
-      console.log(`SMS envoyé avec succès à ${to}, ID: ${response.messageId}`);
+      console.log(`SMS envoyé avec succès à ${formattedNumber}, ID: ${response.messageId}`);
       return true;
     } else {
-      console.error(`Échec de l'envoi du SMS à ${to}. Erreur: ${response.error}`);
+      console.error(`Échec de l'envoi du SMS à ${formattedNumber}. Erreur: ${response.error}`);
       return false;
     }
   } catch (error) {
