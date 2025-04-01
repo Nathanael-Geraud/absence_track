@@ -31,7 +31,7 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   }
   
   // Format the SMS message
-  let message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
+  let message = `GestiAbsences: Votre enfant ${studentName} de la classe de ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
   
   // Ajouter le motif s'il est disponible
   if (reason && reason.trim() !== '') {
@@ -64,8 +64,33 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
       }
     }
     
-    // Utiliser le service Twilio (avec ID alphanumérique) dans tous les cas
-    const response = await smsService.sendSMS(formattedNumber, message);
+    // Vérifier si le numéro Twilio et le numéro destinataire sont identiques
+    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+    let formattedTwilioNumber = twilioNumber;
+    
+    // Formater le numéro Twilio pour la comparaison
+    if (twilioNumber && twilioNumber.startsWith('0') && twilioNumber.length === 10) {
+      formattedTwilioNumber = `+33${twilioNumber.substring(1)}`;
+    } else if (twilioNumber && !twilioNumber.startsWith('+')) {
+      formattedTwilioNumber = `+${twilioNumber}`;
+    }
+    
+    // Comparer les numéros
+    const numbersAreSame = formattedNumber === formattedTwilioNumber;
+    
+    console.log(`[SMS] Vérification de l'identité des numéros:`);
+    console.log(`[SMS] - Numéro destinataire: ${formattedNumber}`);
+    console.log(`[SMS] - Numéro Twilio:       ${formattedTwilioNumber}`);
+    console.log(`[SMS] - Numéros identiques:  ${numbersAreSame}`);
+    
+    let response;
+    if (numbersAreSame) {
+      console.log(`[SMS] Les numéros d'envoi et de destination sont identiques, utilisation du service de simulation`);
+      response = await mockSmsService.sendSMS(formattedNumber, message);
+    } else {
+      // Utiliser le service Twilio pour les numéros différents
+      response = await smsService.sendSMS(formattedNumber, message);
+    }
     
     if (response.success) {
       console.log(`SMS envoyé avec succès à ${formattedNumber}, ID: ${response.messageId}`);
