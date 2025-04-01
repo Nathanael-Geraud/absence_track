@@ -63,7 +63,7 @@ export default function AbsencesPage() {
                 <SelectValue placeholder="Toutes les classes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les classes</SelectItem>
+                <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes?.map(cls => (
                   <SelectItem key={cls.id} value={cls.id.toString()}>{cls.name}</SelectItem>
                 ))}
@@ -88,7 +88,7 @@ export default function AbsencesPage() {
                 <SelectValue placeholder="Toutes les matières" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les matières</SelectItem>
+                <SelectItem value="all">Toutes les matières</SelectItem>
                 {subjects?.map(subject => (
                   <SelectItem key={subject.id} value={subject.id.toString()}>{subject.name}</SelectItem>
                 ))}

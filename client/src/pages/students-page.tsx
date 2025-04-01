@@ -94,7 +94,7 @@ export default function StudentsPage() {
                 <SelectValue placeholder="Toutes les classes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les classes</SelectItem>
+                <SelectItem value="all">Toutes les classes</SelectItem>
                 {classes?.map(cls => (
                   <SelectItem key={cls.id} value={cls.id.toString()}>{cls.name}</SelectItem>
                 ))}
@@ -109,7 +109,7 @@ export default function StudentsPage() {
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="actif">Actif</SelectItem>
                 <SelectItem value="inactif">Inactif</SelectItem>
               </SelectContent>

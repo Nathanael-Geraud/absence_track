@@ -56,8 +56,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <Link href="/">
-            <a className="text-xl font-bold">GestiAbsences</a>
+          <Link href="/" className="text-xl font-bold no-underline text-white hover:text-white/90">
+            GestiAbsences
           </Link>
         </div>
         
@@ -77,16 +77,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Link href="/profile">
-                  <a className="w-full">Mon profil</a>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href="/settings">
-                  <a className="w-full">Paramètres</a>
-                </Link>
-              </DropdownMenuItem>
+              <Link href="/profile">
+                <DropdownMenuItem asChild>
+                  <div className="w-full cursor-pointer">Mon profil</div>
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/settings">
+                <DropdownMenuItem asChild>
+                  <div className="w-full cursor-pointer">Paramètres</div>
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 Déconnexion

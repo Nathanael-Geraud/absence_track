@@ -189,7 +189,7 @@ export default function AbsenceForm({ open, onOpenChange }: AbsenceFormProps) {
                   <FormLabel>Élève</FormLabel>
                   <Select
                     disabled={!selectedClassId}
-                    value={field.value ? field.value.toString() : ""}
+                    value={field.value ? field.value.toString() : "0"}
                     onValueChange={(value) => field.onChange(parseInt(value))}
                   >
                     <FormControl>
@@ -253,7 +253,7 @@ export default function AbsenceForm({ open, onOpenChange }: AbsenceFormProps) {
                 <FormItem>
                   <FormLabel>Matière</FormLabel>
                   <Select
-                    value={field.value ? field.value.toString() : ""}
+                    value={field.value ? field.value.toString() : "0"}
                     onValueChange={(value) => field.onChange(parseInt(value))}
                   >
                     <FormControl>
@@ -289,8 +289,12 @@ export default function AbsenceForm({ open, onOpenChange }: AbsenceFormProps) {
                   <FormControl>
                     <Textarea 
                       placeholder="Indiquez un motif si connu..." 
-                      {...field} 
                       rows={3}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                      value={field.value ?? ""}
                     />
                   </FormControl>
                   <FormMessage />

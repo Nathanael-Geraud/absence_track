@@ -51,17 +51,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <ul className="space-y-1">
               {section.items.map((item) => (
                 <li key={item.path}>
-                  <Link href={item.path}>
-                    <a
-                      className={cn(
-                        "flex items-center px-3 py-2 text-neutral-900 rounded-md hover:bg-neutral-100",
-                        location === item.path && "bg-primary-light text-primary"
-                      )}
-                      onClick={handleLinkClick}
-                    >
-                      <span className="material-icons mr-3 text-neutral-500">{item.icon}</span>
-                      {item.name}
-                    </a>
+                  <Link 
+                    href={item.path}
+                    className={cn(
+                      "flex items-center px-3 py-2 text-neutral-900 rounded-md hover:bg-neutral-100 no-underline",
+                      location === item.path && "bg-primary-light text-primary"
+                    )}
+                    onClick={handleLinkClick}
+                  >
+                    <span className="material-icons mr-3 text-neutral-500">{item.icon}</span>
+                    {item.name}
                   </Link>
                 </li>
               ))}
