@@ -6,7 +6,8 @@ import { sendSms } from "./sms";
 import { z } from "zod";
 import { insertAbsenceSchema, insertClassSchema, insertStudentSchema, insertSubjectSchema } from "@shared/schema";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+// Version mise à jour pour fonctionner avec Netlify Functions ou server HTTP standard
+export async function registerRoutes(app: Express): Promise<Server | void> {
   // Set up authentication routes
   setupAuth(app);
 
@@ -439,6 +440,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Pour le déploiement sur Netlify Functions, nous retournons sans créer un serveur HTTP
+  // Les fonctions serverless gèrent cela pour nous
+  // Pour le développement local, nous créons et retournons un serveur HTTP
+  if (process.env.NETLIFY) {
+    console.log('[Netlify] Routes registered for serverless functions');
+    return; // Ne retourne rien pour les fonctions Netlify
+  } else {
+    const httpServer = createServer(app);
+    console.log('[Server] Routes registered for HTTP server');
+    return httpServer;
+  }
 }

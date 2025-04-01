@@ -1,8 +1,21 @@
 [build]
-  command = "cd client && npm run build"
+  command = "npm install && npm run build"
   publish = "dist/public"
+  node_bundler = "esbuild"
 
-# Règles de redirection pour le routage côté client
+# Configuration des fonctions Netlify pour le backend
+[functions]
+  directory = "dist/netlify-functions"
+  node_bundler = "esbuild"
+  
+# Règle de redirection pour l'API vers les fonctions Netlify
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+# Règle de redirection pour le routage côté client (doit être APRÈS la règle API)
 [[redirects]]
   from = "/*"
   to = "/index.html"

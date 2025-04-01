@@ -21,87 +21,74 @@ Cette application permet aux enseignants d'enregistrer les absences des élèves
 
 ## Architecture
 
-L'application est divisée en deux parties déployables séparément :
+L'application peut maintenant être entièrement déployée sur Netlify :
 - Frontend : Application React hébergée sur Netlify
-- Backend : API NodeJS/Express hébergée sur Heroku/Render/Railway
+- Backend : API NodeJS/Express hébergée en tant que fonctions Netlify (serverless)
+- Base de données : Utilisation de Neon PostgreSQL pour la base de données en production (optionnelle)
 
-## Déploiement sur Netlify (Frontend)
+Cette architecture tout-en-un simplifie considérablement le déploiement et la maintenance.
+
+## Déploiement complet sur Netlify (Frontend + Backend)
 
 1. Créez un compte sur [Netlify](https://www.netlify.com/) si ce n'est pas déjà fait
 2. Depuis le Dashboard Netlify, cliquez sur "New site from Git"
 3. Sélectionnez votre dépôt Git
-4. Les paramètres de build sont déjà configurés dans le fichier `netlify.toml` :
-   - Build command : `cd client && npm run build`
+4. Configurez les paramètres de build :
+   - Build command : `./deploy-netlify.sh`
    - Publish directory : `dist/public`
-5. Ajoutez les variables d'environnement :
-   - `VITE_API_URL` : URL de votre backend (ex: https://votre-app-backend.herokuapp.com)
+   - Les fonctions serverless seront automatiquement détectées dans `dist/netlify-functions`
+5. Ajoutez les variables d'environnement (dans "Site settings > Environment variables") :
+   - `SESSION_SECRET` : Une chaîne aléatoire sécurisée pour les sessions
+   - `TWILIO_ACCOUNT_SID` : SID de votre compte Twilio
+   - `TWILIO_AUTH_TOKEN` : Token d'authentification Twilio
+   - `TWILIO_PHONE_NUMBER` : Numéro de téléphone Twilio (format international +33XXXXXXXXX)
+   - `NETLIFY` : `true` (pour indiquer l'environnement Netlify)
+   - Ajoutez `DATABASE_URL` si vous utilisez une base de données PostgreSQL
 6. Cliquez sur "Deploy site"
 
-**Remarque importante :** Si vous rencontrez des problèmes de build liés aux chemins d'importation avec l'alias `@/`, modifiez tous les imports dans les fichiers client pour utiliser des chemins relatifs à la place (comme nous l'avons fait pour les composants toast et toaster).
+**Remarque :** Le script `deploy-netlify.sh` préparera tous les fichiers nécessaires pour le déploiement complet, à la fois pour le frontend et les fonctions serverless du backend.
 
-## Déploiement du Backend
+## Déploiement Base de Données (optionnel)
 
-### Option 1 : Heroku
+Pour une application en production, il est recommandé d'utiliser une base de données PostgreSQL persistante :
 
-1. Créez un compte sur [Heroku](https://www.heroku.com/) si ce n'est pas déjà fait
-2. Installez [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
-3. Connectez-vous à Heroku :
-   ```
-   heroku login
-   ```
-4. Créez une application Heroku :
-   ```
-   heroku create votre-app-backend
-   ```
-5. Configurez les variables d'environnement :
-   ```
-   heroku config:set NODE_ENV=production
-   heroku config:set SESSION_SECRET=votre_secret_de_session
-   heroku config:set CORS_ORIGIN=https://votre-app-frontend.netlify.app
-   heroku config:set TWILIO_ACCOUNT_SID=votre_account_sid
-   heroku config:set TWILIO_AUTH_TOKEN=votre_auth_token
-   heroku config:set TWILIO_PHONE_NUMBER=votre_numero_twilio
-   ```
-6. Si vous utilisez une base de données PostgreSQL :
-   ```
-   heroku addons:create heroku-postgresql:hobby-dev
-   ```
-7. Déployez votre application :
-   ```
-   git push heroku main
-   ```
+### Option recommandée : Neon Database
 
-### Option 2 : Render
+1. Créez un compte sur [Neon](https://neon.tech/)
+2. Créez un nouveau projet
+3. Récupérez la chaîne de connexion depuis l'interface Neon
+4. Ajoutez-la comme variable d'environnement `DATABASE_URL` dans les paramètres de votre site Netlify
 
-1. Créez un compte sur [Render](https://render.com/)
-2. Depuis le Dashboard, cliquez sur "New Web Service"
-3. Connectez votre dépôt Git
-4. Configurez le service :
-   - Name : votre-app-backend
-   - Build Command : `npm install`
-   - Start Command : `npm start`
-5. Ajoutez les variables d'environnement (identiques à celles de Heroku)
-6. Cliquez sur "Create Web Service"
+### Alternatives
+
+Vous pouvez également utiliser d'autres fournisseurs PostgreSQL comme :
+- Supabase
+- Railway
+- Heroku Postgres
 
 ## Variables d'environnement requises
 
-### Backend
-- `NODE_ENV` : 'production' en production
-- `PORT` : Port sur lequel le serveur s'exécute (souvent défini automatiquement)
+### Déploiement Netlify unifié
+Pour le déploiement complet sur Netlify (frontend + backend serverless), configurez ces variables dans les paramètres de votre site Netlify :
+
 - `SESSION_SECRET` : Clé secrète pour les sessions
-- `CORS_ORIGIN` : URL de votre frontend (ex: https://votre-app.netlify.app)
+- `NETLIFY` : `true` (pour indiquer l'environnement Netlify)
+- `TWILIO_ACCOUNT_SID` : SID de votre compte Twilio
+- `TWILIO_AUTH_TOKEN` : Token d'authentification Twilio
+- `TWILIO_PHONE_NUMBER` : Numéro de téléphone Twilio (format international +33XXXXXXXXX)
+- `TWILIO_TEST_TO_NUMBER` : (Optionnel) Numéro pour les tests en développement
+- `DATABASE_URL` : (Optionnel) URL de connexion à votre base de données PostgreSQL
+
+### Développement local
+Pour le développement local, configurez ces variables dans le fichier `.env` :
+
+- `SESSION_SECRET` : Clé secrète pour les sessions
 - `TWILIO_ACCOUNT_SID` : SID de votre compte Twilio
 - `TWILIO_AUTH_TOKEN` : Token d'authentification Twilio
 - `TWILIO_PHONE_NUMBER` : Numéro de téléphone Twilio (format international +33XXXXXXXXX)
 - `TWILIO_TEST_TO_NUMBER` : (Optionnel) Numéro pour les tests en développement
 
-Si vous utilisez PostgreSQL:
-- `DATABASE_URL` : URL de connexion à votre base de données PostgreSQL
-
-### Frontend
-- `VITE_API_URL` : URL de votre backend (ex: https://votre-app-backend.herokuapp.com)
-
-Un fichier `.env.example` est fourni dans le dossier `server` comme modèle pour configurer votre propre fichier `.env`.
+Un fichier `.env.example` est fourni à la racine du projet comme modèle pour configurer votre propre fichier `.env`.
 
 ## Après le déploiement
 
@@ -111,10 +98,10 @@ Un fichier `.env.example` est fourni dans le dossier `server` comme modèle pour
 
 ## Problèmes courants
 
-- **Erreurs CORS** : Vérifiez que la variable `CORS_ORIGIN` correspond exactement à l'URL de votre frontend
-- **Problèmes d'authentification** : Les cookies de session peuvent ne pas fonctionner entre domaines. Envisagez d'utiliser JWT pour l'authentification en production.
 - **SMS non envoyés** : Vérifiez vos identifiants Twilio et assurez-vous que votre compte est actif. Notez que les comptes d'essai Twilio ont des limitations.
 - **Erreurs de build Netlify** : Si vous rencontrez des erreurs liées aux imports avec l'alias `@/`, convertissez les imports en chemins relatifs.
+- **Problèmes de sessions** : Les fonctions serverless Netlify nécessitent une méthode de persistance des sessions. Par défaut, nous utilisons une solution en mémoire, mais pour la production, envisagez d'utiliser une base de données PostgreSQL pour les sessions.
+- **Timeout des fonctions** : Les fonctions Netlify ont une limite de 10 secondes d'exécution. Si vous rencontrez des timeouts, optimisez vos requêtes ou envisagez d'utiliser Netlify Background Functions pour les opérations longues.
 
 ## Note sur les builds Netlify
 
@@ -139,5 +126,17 @@ L'application utilise Twilio pour envoyer des SMS aux parents d'élèves. Quelqu
 
 1. Clonez le dépôt
 2. Installez les dépendances : `npm install`
-3. Copiez `.env.example` vers `.env` dans le dossier `server` et configurez les variables
+3. Copiez `.env.example` vers `.env` à la racine du projet et configurez les variables
 4. Démarrez l'application : `npm run dev`
+
+## Avantages du déploiement unifié sur Netlify
+
+La configuration actuelle offre plusieurs avantages par rapport au déploiement séparé :
+
+1. **Simplification** : Un seul service à gérer au lieu de deux (frontend et backend)
+2. **Réduction des coûts** : Un seul hébergement payant à maintenir
+3. **Performance** : Les fonctions serverless s'adaptent automatiquement à la charge
+4. **Sécurité** : Pas de problèmes CORS entre domaines
+5. **Facilité de maintenance** : Une seule base de code à déployer, un seul pipeline CI/CD
+
+Pour les applications avec un trafic modéré, cette solution offre un excellent équilibre entre performance, coût et facilité de déploiement.
