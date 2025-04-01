@@ -1,5 +1,5 @@
-// This is a simulated SMS service for demo purposes
-// In a production environment, you would integrate with a real SMS provider
+// SMS service that uses Twilio for production or falls back to simulation
+import { smsService } from './smsService';
 
 interface SendSmsParams {
   to: string;
@@ -17,11 +17,21 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   // Format the SMS message
   const message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
   
-  console.log(`SMS envoyé à ${to}: ${message}`);
-  
-  // Simulate SMS sending success with 95% success rate
-  // In a real implementation, this would call an actual SMS API
-  return Math.random() < 0.95;
+  try {
+    // Use our SMS service that utilizes Twilio if configured
+    const response = await smsService.sendSMS(to, message);
+    
+    if (response.success) {
+      console.log(`SMS envoyé avec succès à ${to}, ID: ${response.messageId}`);
+      return true;
+    } else {
+      console.error(`Échec de l'envoi du SMS à ${to}. Erreur: ${response.error}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('Erreur inattendue lors de l\'envoi du SMS:', error);
+    return false;
+  }
 }
 
 // Helper function to format date in French
