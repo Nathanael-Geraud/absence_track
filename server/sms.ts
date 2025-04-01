@@ -1,5 +1,6 @@
 // SMS service that uses Twilio for production or falls back to simulation
 import { smsService } from './smsService';
+import { mockSmsService } from './mockSmsService';
 
 interface SendSmsParams {
   to: string;
@@ -32,8 +33,28 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   const message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
   
   try {
-    // Use our SMS service that utilizes Twilio if configured
-    const response = await smsService.sendSMS(formattedNumber, message);
+    // Check if we need to use the mock service (if source and destination numbers are the same)
+    const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+    let formattedTwilioNumber = twilioNumber;
+    
+    // Format the Twilio number for comparison
+    if (twilioNumber && twilioNumber.startsWith('0') && twilioNumber.length === 10) {
+      formattedTwilioNumber = `+33${twilioNumber.substring(1)}`;
+    } else if (twilioNumber && !twilioNumber.startsWith('+')) {
+      formattedTwilioNumber = `+${twilioNumber}`;
+    }
+    
+    // Check if the numbers are the same
+    const numbersAreSame = formattedNumber === formattedTwilioNumber;
+    
+    let response;
+    if (numbersAreSame) {
+      console.log(`[SMS] Numéro d'envoi et de destination identiques, utilisation du service de simulation`);
+      response = await mockSmsService.sendSMS(formattedNumber, message);
+    } else {
+      // Use our SMS service that utilizes Twilio if configured
+      response = await smsService.sendSMS(formattedNumber, message);
+    }
     
     if (response.success) {
       console.log(`SMS envoyé avec succès à ${formattedNumber}, ID: ${response.messageId}`);
