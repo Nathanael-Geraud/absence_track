@@ -1,8 +1,18 @@
 #!/bin/bash
-# Script pour construire uniquement le frontend pour Netlify
 
-# Construire uniquement le client
-cd client && vite build
+# Script de build pour le frontend en production
 
-# Revenir à la racine
+# Accéder au répertoire client
+cd client
+
+# Installer les dépendances
+npm install
+
+# Construire le projet
+npm run build
+
+# Afficher un message de confirmation
+echo "Build client terminé avec succès !"
+
+# Revenir au répertoire principal
 cd ..

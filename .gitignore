@@ -4,3 +4,27 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Variables d'environnement
+.env
+.env.local
+server/.env
+client/.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Fichiers temporaires
+.tmp
+.temp
+.eslintcache
+
+# Dossiers de couverture de test
+coverage
+.nyc_output
+
+# Archives et builds
+build/
+build-output/

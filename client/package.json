@@ -1,9 +1,10 @@
 {
-  "name": "client",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "gesti-absences-client",
+  "version": "1.0.0",
+  "description": "Client pour l'application de gestion des absences scolaires",
   "scripts": {
-    "build": "vite build"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   }
 }
