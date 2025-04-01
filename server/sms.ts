@@ -10,10 +10,11 @@ interface SendSmsParams {
   startTime: string;
   endTime: string;
   subject: string;
+  reason?: string; // Motif de l'absence (optionnel)
 }
 
 export async function sendSms(params: SendSmsParams): Promise<boolean> {
-  const { to, studentName, className, date, startTime, endTime, subject } = params;
+  const { to, studentName, className, date, startTime, endTime, subject, reason } = params;
   
   // Format the recipient phone number to E.164 format if needed
   let formattedNumber = to;
@@ -30,7 +31,15 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   }
   
   // Format the SMS message
-  const message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
+  let message = `GestiAbsences: Votre enfant ${studentName} de la classe ${className} était absent au cours de ${subject} le ${formatFrenchDate(date)} de ${formatTime(startTime)} à ${formatTime(endTime)}.`;
+  
+  // Ajouter le motif s'il est disponible
+  if (reason && reason.trim() !== '') {
+    message += ` Motif: ${reason}.`;
+  }
+  
+  // Terminer par une note de contact
+  message += ` Pour toute information, contactez l'établissement.`;
   
   try {
     // Nous utilisons maintenant un expéditeur alphanumérique,

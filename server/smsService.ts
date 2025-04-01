@@ -19,7 +19,8 @@ export class SMSService {
   private twilioClient: twilio.Twilio | null = null;
   private twilioSender: string | null = null;
   private isConfigured: boolean = false;
-  private useAlphanumericSender: boolean = true; // Par défaut, utiliser un ID alphanumérique
+  private useAlphanumericSender: boolean = false; // Désactivé pour les comptes d'essai Twilio
+  private isTrial: boolean = false;
 
   constructor() {
     // Initialize Twilio client if environment variables are set
@@ -30,12 +31,31 @@ export class SMSService {
     if (accountSid && authToken) {
       this.twilioClient = twilio(accountSid, authToken);
       
-      // Si nous utilisons un ID alphanumérique comme expéditeur
-      if (this.useAlphanumericSender) {
+      // Check if using trial account
+      if (accountSid.startsWith('AC') && accountSid.length === 34) {
+        this.isTrial = true;
+        console.log('[SMS Service] Compte d\'essai Twilio détecté.');
+        console.log('[SMS Service] REMARQUE: Les comptes d\'essai ne peuvent pas utiliser d\'ID alphanumérique.');
+        console.log('[SMS Service] Le numéro de téléphone Twilio sera utilisé comme expéditeur.');
+        
+        // Forcer l'utilisation du numéro de téléphone pour les comptes d'essai
+        this.useAlphanumericSender = false;
+        
+        console.log('[SMS Service] REMARQUE IMPORTANTE: Si vous utilisez un compte Twilio d\'essai,');
+        console.log('[SMS Service] vous devez vérifier les numéros de téléphone des destinataires');
+        console.log('[SMS Service] dans votre console Twilio avant de pouvoir leur envoyer des SMS.');
+        console.log('[SMS Service] Visitez: https://www.twilio.com/console/phone-numbers/verified');
+      } else {
+        // Ce n'est pas un compte d'essai, nous pouvons utiliser l'ID alphanumérique
+        this.useAlphanumericSender = true;
+      }
+      
+      // Si nous utilisons un ID alphanumérique comme expéditeur et ce n'est pas un compte d'essai
+      if (this.useAlphanumericSender && !this.isTrial) {
         this.twilioSender = "GestiAbs"; // Maximum 11 caractères
         console.log(`[SMS Service] Using alphanumeric sender ID: ${this.twilioSender}`);
       } 
-      // Sinon, utiliser le numéro de téléphone Twilio (si disponible)
+      // Sinon, utiliser le numéro de téléphone Twilio (obligatoire pour les comptes d'essai)
       else if (phoneNumber) {
         // Format the Twilio phone number correctly (should be in E.164 format)
         if (phoneNumber.startsWith('0') && phoneNumber.length === 10) {
@@ -54,14 +74,6 @@ export class SMSService {
       
       this.isConfigured = true;
       console.log('[SMS Service] Twilio client initialized with provided credentials');
-      
-      // Check if using trial account
-      if (accountSid.startsWith('AC') && accountSid.length === 34) {
-        console.log('[SMS Service] REMARQUE IMPORTANTE: Si vous utilisez un compte Twilio d\'essai,');
-        console.log('[SMS Service] vous devez vérifier les numéros de téléphone des destinataires');
-        console.log('[SMS Service] dans votre console Twilio avant de pouvoir leur envoyer des SMS.');
-        console.log('[SMS Service] Visitez: https://www.twilio.com/console/phone-numbers/verified');
-      }
     } else {
       console.log('[SMS Service] Warning: Twilio is not configured. SMS will be simulated.');
     }

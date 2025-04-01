@@ -336,7 +336,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           date: validatedData.date,
           startTime: validatedData.start_time,
           endTime: validatedData.end_time,
-          subject: subject.name
+          subject: subject.name,
+          reason: validatedData.reason || undefined
         });
         
         if (smsSuccess) {
