@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { StudentWithClass } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,14 +18,37 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Edit, Eye, History } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import StudentForm from "./student-form";
+import StudentDetails from "./student-details";
+import StudentAbsenceHistory from "./student-absence-history";
 
 interface StudentTableProps {
   students: StudentWithClass[];
 }
 
 export default function StudentTable({ students }: StudentTableProps) {
+  const [selectedStudent, setSelectedStudent] = useState<StudentWithClass | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showAbsenceHistory, setShowAbsenceHistory] = useState(false);
+  
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+  
+  const handleEditClick = (student: StudentWithClass) => {
+    setSelectedStudent(student);
+    setShowEditForm(true);
+  };
+  
+  const handleDetailsClick = (student: StudentWithClass) => {
+    setSelectedStudent(student);
+    setShowDetails(true);
+  };
+  
+  const handleHistoryClick = (student: StudentWithClass) => {
+    setSelectedStudent(student);
+    setShowAbsenceHistory(true);
   };
   
   return (
@@ -80,7 +104,8 @@ export default function StudentTable({ students }: StudentTableProps) {
                 <TableCell>{student.absences_count}</TableCell>
                 <TableCell>
                   <Badge 
-                    variant={student.status === "actif" ? "success" : "destructive"}
+                    variant={student.status === "actif" ? "outline" : "destructive"}
+                    className={student.status === "actif" ? "bg-green-100 text-green-700" : ""}
                   >
                     {student.status === "actif" ? "Actif" : "Inactif"}
                   </Badge>
@@ -89,7 +114,12 @@ export default function StudentTable({ students }: StudentTableProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="mr-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="mr-1"
+                          onClick={() => handleEditClick(student)}
+                        >
                           <Edit className="h-4 w-4 text-primary" />
                         </Button>
                       </TooltipTrigger>
@@ -102,7 +132,12 @@ export default function StudentTable({ students }: StudentTableProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="mr-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="mr-1"
+                          onClick={() => handleHistoryClick(student)}
+                        >
                           <History className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </TooltipTrigger>
@@ -115,7 +150,11 @@ export default function StudentTable({ students }: StudentTableProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDetailsClick(student)}
+                        >
                           <Eye className="h-4 w-4 text-muted-foreground" />
                         </Button>
                       </TooltipTrigger>
@@ -147,6 +186,28 @@ export default function StudentTable({ students }: StudentTableProps) {
             </Button>
           </div>
         </div>
+      )}
+      
+      {selectedStudent && (
+        <>
+          <StudentForm 
+            open={showEditForm} 
+            onOpenChange={setShowEditForm} 
+            student={selectedStudent} 
+          />
+          
+          <StudentDetails 
+            open={showDetails} 
+            onOpenChange={setShowDetails} 
+            student={selectedStudent} 
+          />
+          
+          <StudentAbsenceHistory 
+            open={showAbsenceHistory} 
+            onOpenChange={setShowAbsenceHistory} 
+            student={selectedStudent} 
+          />
+        </>
       )}
     </div>
   );

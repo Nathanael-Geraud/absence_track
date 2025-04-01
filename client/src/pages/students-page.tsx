@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import StudentTable from "@/components/student/student-table";
+import StudentForm from "@/components/student/student-form";
 
 export default function StudentsPage() {
   const [showStudentForm, setShowStudentForm] = useState(false);
@@ -38,11 +39,11 @@ export default function StudentsPage() {
       if (!fullName.includes(searchLower)) return false;
     }
     
-    if (filters.class_id && student.class_id.toString() !== filters.class_id) {
+    if (filters.class_id && filters.class_id !== "all" && student.class_id.toString() !== filters.class_id) {
       return false;
     }
     
-    if (filters.status && student.status !== filters.status) {
+    if (filters.status && filters.status !== "all" && student.status !== filters.status) {
       return false;
     }
     
@@ -132,6 +133,12 @@ export default function StudentsPage() {
           <StudentTable students={filteredStudents || []} />
         )}
       </Card>
+      
+      {/* New Student Form */}
+      <StudentForm 
+        open={showStudentForm} 
+        onOpenChange={setShowStudentForm} 
+      />
     </MainLayout>
   );
 }

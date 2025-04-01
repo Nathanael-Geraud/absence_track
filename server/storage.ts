@@ -21,6 +21,7 @@ export interface IStorage {
   getStudentsByClass(classId: number): Promise<Student[]>;
   getStudent(id: number): Promise<Student | undefined>;
   createStudent(student: InsertStudent): Promise<Student>;
+  updateStudent(id: number, student: InsertStudent): Promise<Student>;
   
   // Subject operations
   getAllSubjects(): Promise<Subject[]>;
@@ -297,6 +298,18 @@ export class MemStorage implements IStorage {
     const newStudent = { ...student, id };
     this.students.set(id, newStudent);
     return newStudent;
+  }
+  
+  async updateStudent(id: number, student: InsertStudent): Promise<Student> {
+    const existingStudent = await this.getStudent(id);
+    
+    if (!existingStudent) {
+      throw new Error(`Student with id ${id} not found`);
+    }
+    
+    const updatedStudent = { ...student, id };
+    this.students.set(id, updatedStudent);
+    return updatedStudent;
   }
   
   // Subject operations

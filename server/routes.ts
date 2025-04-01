@@ -142,6 +142,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Erreur serveur" });
     }
   });
+  
+  app.patch("/api/students/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const id = parseInt(req.params.id);
+      const existingStudent = await storage.getStudent(id);
+      
+      if (!existingStudent) {
+        return res.status(404).json({ message: "Élève non trouvé" });
+      }
+      
+      const validatedData = insertStudentSchema.parse(req.body);
+      
+      // Verify that class exists
+      const classExists = await storage.getClass(validatedData.class_id);
+      if (!classExists) {
+        return res.status(400).json({ message: "La classe spécifiée n'existe pas" });
+      }
+      
+      // Update student (assuming storage has an updateStudent method)
+      const updatedStudent = await storage.updateStudent(id, validatedData);
+      
+      const studentClass = await storage.getClass(updatedStudent.class_id);
+      const absences = await storage.getAbsencesByStudent(id);
+      
+      res.json({
+        ...updatedStudent,
+        class: {
+          id: studentClass?.id || 0,
+          name: studentClass?.name || "Inconnue"
+        },
+        absences_count: absences.length
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Données invalides", errors: error.errors });
+      }
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  });
 
   // Absences API
   app.get("/api/absences", async (req, res) => {
@@ -316,6 +357,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get absences for a specific student
+  app.get("/api/students/:id/absences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const id = parseInt(req.params.id);
+      const student = await storage.getStudent(id);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Élève non trouvé" });
+      }
+      
+      const absences = await storage.getAbsencesByStudent(id);
+      
+      // Get additional data for each absence
+      const subjects = await storage.getAllSubjects();
+      const classes = await storage.getAllClasses();
+      const subjectMap = new Map(subjects.map(s => [s.id, s]));
+      const studentClass = await storage.getClass(student.class_id);
+      
+      const absencesWithDetails = absences.map(absence => {
+        const subject = subjectMap.get(absence.subject_id);
+        
+        return {
+          ...absence,
+          student: {
+            id: student.id,
+            firstname: student.firstname,
+            lastname: student.lastname
+          },
+          class: {
+            id: studentClass?.id || 0,
+            name: studentClass?.name || "Inconnue"
+          },
+          subject: {
+            id: subject?.id || 0,
+            name: subject?.name || "Inconnue"
+          }
+        };
+      });
+      
+      res.json(absencesWithDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  });
+  
   // Dashboard stats API
   app.get("/api/stats/dashboard", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
