@@ -1,10 +1,23 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import cors from 'cors';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configuration CORS pour la production
+if (process.env.NODE_ENV === 'production') {
+  const corsOptions = {
+    origin: process.env.CORS_ORIGIN || 'https://votre-app-netlify.app',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  };
+  app.use(cors(corsOptions));
+  console.log(`CORS configuré pour l'origine: ${corsOptions.origin}`);
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -56,10 +69,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // En production, utiliser le port défini par l'environnement
+  // En développement, utiliser le port 5000
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
   server.listen({
     port,
     host: "0.0.0.0",

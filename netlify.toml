@@ -1,0 +1,21 @@
+[build]
+  base = "."
+  publish = "dist"
+  command = "cd client && vite build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_API_URL = "https://votre-backend-api.herokuapp.com"
+
+# Redirection pour le client-side routing de React
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Paramètres pour le développement local
+[dev]
+  command = "npm run dev"
+  port = 5000
+  targetPort = 5000
+  publish = "dist"
