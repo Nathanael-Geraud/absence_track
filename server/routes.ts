@@ -314,8 +314,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (send_notification) {
         const studentClass = await storage.getClass(student.class_id);
         
+        // Utiliser un numéro de test vérifiable si spécifié dans les variables d'environnement
+        // Sinon, utiliser le numéro de téléphone des parents enregistré
+        const testPhoneNumber = process.env.TWILIO_TEST_TO_NUMBER;
+        const phoneToUse = testPhoneNumber || student.parent_phone;
+        
+        if (testPhoneNumber) {
+          console.log(`[SMS Service] Utilisation du numéro de test vérifié: ${testPhoneNumber} au lieu de ${student.parent_phone}`);
+        }
+        
         const smsSuccess = await sendSms({
-          to: student.parent_phone,
+          to: phoneToUse,
           studentName: `${student.firstname} ${student.lastname}`,
           className: studentClass?.name || "",
           date: validatedData.date,

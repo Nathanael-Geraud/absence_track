@@ -31,6 +31,14 @@ export class SMSService {
       this.twilioPhone = phoneNumber;
       this.isConfigured = true;
       console.log('[SMS Service] Twilio client initialized with provided credentials');
+      
+      // Check if using trial account
+      if (accountSid.startsWith('AC') && accountSid.length === 34) {
+        console.log('[SMS Service] REMARQUE IMPORTANTE: Si vous utilisez un compte Twilio d\'essai,');
+        console.log('[SMS Service] vous devez vérifier les numéros de téléphone des destinataires');
+        console.log('[SMS Service] dans votre console Twilio avant de pouvoir leur envoyer des SMS.');
+        console.log('[SMS Service] Visitez: https://www.twilio.com/console/phone-numbers/verified');
+      }
     } else {
       console.log('[SMS Service] Warning: Twilio is not configured. SMS will be simulated.');
     }
@@ -49,8 +57,18 @@ export class SMSService {
     // Check if Twilio is configured
     if (this.isConfigured && this.twilioClient && this.twilioPhone) {
       try {
-        // Make sure phone number has international format (starts with +)
-        const formattedNumber = to.startsWith('+') ? to : `+${to}`;
+        // Format the phone number to E.164 format required by Twilio
+        let formattedNumber = to;
+        
+        // Handle French numbers
+        if (to.startsWith('0') && (to.length === 10)) {
+          // French number: replace initial 0 with +33
+          formattedNumber = `+33${to.substring(1)}`;
+          console.log(`[SMS Service] Formatted French number from ${to} to ${formattedNumber}`);
+        } else if (!to.startsWith('+')) {
+          // Add + prefix if missing
+          formattedNumber = `+${to}`;
+        }
         
         // Send SMS via Twilio
         const twilioMessage = await this.twilioClient.messages.create({
