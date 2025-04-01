@@ -36,13 +36,17 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Configuration de session adaptée pour Netlify Functions
+  const isNetlify = process.env.NETLIFY === 'true';
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "gestiabsences-secret-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Important pour Netlify Functions
+    saveUninitialized: true, // Important pour Netlify Functions
     store: storage.sessionStore,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      // En environnement Netlify, nous utilisons sameSite: 'none' pour permettre les cookies cross-domain
+      secure: process.env.NODE_ENV === "production" || isNetlify,
+      sameSite: isNetlify ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     }
   };
@@ -110,12 +114,28 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info?.message || "Identifiants incorrects" });
+    console.log(`[Auth] Tentative de connexion de l'utilisateur: ${req.body.username}`);
+    
+    passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
+      if (err) {
+        console.error(`[Auth] Erreur lors de l'authentification:`, err);
+        return next(err);
+      }
+      
+      if (!user) {
+        console.log(`[Auth] Échec d'authentification pour ${req.body.username}: ${info?.message || "Identifiants incorrects"}`);
+        return res.status(401).json({ message: info?.message || "Identifiants incorrects" });
+      }
+      
+      console.log(`[Auth] Authentification réussie pour ${user.username}, connexion en cours...`);
       
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error(`[Auth] Erreur lors de la connexion:`, err);
+          return next(err);
+        }
+        
+        console.log(`[Auth] Connexion réussie pour ${user.username}`);
         const { password, ...userWithoutPassword } = user;
         return res.status(200).json(userWithoutPassword);
       });
@@ -130,7 +150,14 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log(`[Auth] Vérification de l'utilisateur connecté. Authentifié: ${req.isAuthenticated()}`);
+    
+    if (!req.isAuthenticated()) {
+      console.log('[Auth] Aucun utilisateur connecté, retour 401');
+      return res.sendStatus(401);
+    }
+    
+    console.log(`[Auth] Utilisateur connecté: ${(req.user as SelectUser).username}`);
     const { password, ...userWithoutPassword } = req.user as SelectUser;
     res.json(userWithoutPassword);
   });

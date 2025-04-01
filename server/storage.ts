@@ -75,9 +75,24 @@ export class MemStorage implements IStorage {
     this.subjectCounter = 1;
     this.absenceCounter = 1;
     
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // Prune expired entries every 24h
-    });
+    // Configuration du store de session, optimisée pour Netlify Functions
+    const isNetlify = process.env.NETLIFY === 'true';
+    
+    if (isNetlify) {
+      console.log('[Storage] Initialisation du store de session pour Netlify Functions (durée étendue)');
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000, // 24h
+        ttl: 7 * 24 * 60 * 60 * 1000, // 7 jours (plus long pour les fonctions serverless)
+        stale: false, // Ne pas conserver les sessions expirées
+        noDisposeOnSet: true, // Éviter la destruction lors des mises à jour
+      });
+    } else {
+      // Configuration standard pour le développement
+      console.log('[Storage] Initialisation du store de session standard');
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000 // Prune expired entries every 24h
+      });
+    }
     
     // Initialize with default data
     this.initDefaultData();
