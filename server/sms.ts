@@ -47,9 +47,14 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
     // Check if the numbers are the same
     const numbersAreSame = formattedNumber === formattedTwilioNumber;
     
+    console.log(`[SMS] Comparaison des numéros de téléphone:`);
+    console.log(`[SMS] - Numéro destinataire: ${formattedNumber}`);
+    console.log(`[SMS] - Numéro Twilio:       ${formattedTwilioNumber}`);
+    console.log(`[SMS] - Numéros identiques:  ${numbersAreSame}`);
+    
     let response;
     if (numbersAreSame) {
-      console.log(`[SMS] Numéro d'envoi et de destination identiques, utilisation du service de simulation`);
+      console.log(`[SMS] Numéros d'envoi et de destination identiques, utilisation du service de simulation`);
       response = await mockSmsService.sendSMS(formattedNumber, message);
     } else {
       // Use our SMS service that utilizes Twilio if configured

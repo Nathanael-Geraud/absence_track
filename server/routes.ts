@@ -316,7 +316,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Utiliser un numéro de test vérifiable si spécifié dans les variables d'environnement
         // Sinon, utiliser le numéro de téléphone des parents enregistré
-        const testPhoneNumber = process.env.TWILIO_TEST_TO_NUMBER;
+        let testPhoneNumber = process.env.TWILIO_TEST_TO_NUMBER || '';
+        
+        // S'assurer que le numéro de test est bien formaté (au format international)
+        if (testPhoneNumber && !testPhoneNumber.startsWith('+')) {
+          testPhoneNumber = `+${testPhoneNumber}`;
+        }
+        
         const phoneToUse = testPhoneNumber || student.parent_phone;
         
         if (testPhoneNumber) {
